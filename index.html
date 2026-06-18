@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Benchmark Ciberseguridad — UAO 2026</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--r:#ed1d24;--n:#0d0d0d;--w:#fff;--g1:#f5f5f5;--g2:#e8e8e8;--g3:#9e9e9e;--g4:#424242;--sh:0 2px 16px rgba(0,0,0,0.09)}
+body{font-family:Arial,Helvetica,sans-serif;background:var(--g1);color:var(--n)}
+/* ── HEADER ── */
+header{background:var(--n);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 28px;height:58px;position:sticky;top:0;z-index:300;box-shadow:0 2px 10px rgba(0,0,0,.5)}
+.h-left{display:flex;align-items:center;gap:12px}
+.h-logo{background:var(--r);color:#fff;font-weight:900;font-size:1.05rem;padding:6px 12px;border-radius:4px;letter-spacing:1px}
+.h-title{font-size:.92rem;font-weight:700}
+.h-sub{font-size:.68rem;color:var(--g3);margin-top:1px}
+.h-badge{background:var(--r);color:#fff;font-size:.66rem;font-weight:700;padding:4px 11px;border-radius:20px;letter-spacing:.8px}
+/* ── NAV ── */
+nav{background:var(--r);display:flex;overflow-x:auto;padding:0 12px;scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+nav a{color:rgba(255,255,255,.82);text-decoration:none;padding:11px 14px;font-size:.78rem;font-weight:700;white-space:nowrap;border-bottom:3px solid transparent;display:inline-block}
+nav a:hover{color:#fff;border-bottom-color:#fff;background:rgba(255,255,255,.1)}
+/* ── PORTADA ── */
+.portada{background:linear-gradient(135deg,#0d0d0d 0%,#1e0305 55%,#400608 100%);color:#fff;padding:52px 32px 44px;text-align:center}
+.p-logo{display:inline-block;background:var(--r);color:#fff;font-weight:900;font-size:1.9rem;padding:8px 20px;border-radius:6px;letter-spacing:2px;margin-bottom:22px}
+.portada h2{font-size:2.2rem;font-weight:900;letter-spacing:-1px;line-height:1.15;margin-bottom:10px;text-transform:uppercase}
+.portada h2 span{color:var(--r)}
+.portada p{font-size:.88rem;color:rgba(255,255,255,.6);max-width:620px;margin:0 auto 6px;line-height:1.6}
+.p-meta{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:22px}
+.p-meta span{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.14);padding:5px 14px;border-radius:30px;font-size:.74rem;font-weight:600}
+/* ── LAYOUT ── */
+main{max-width:1360px;margin:0 auto;padding:28px 18px}
+section{margin-bottom:36px}
+.sec-hdr{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.sec-line{width:5px;height:24px;background:var(--r);border-radius:3px;flex-shrink:0}
+.sec-hdr h2{font-size:1.15rem;font-weight:900;text-transform:uppercase;letter-spacing:.5px}
+/* ── KPI ── */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:11px}
+.kpi{background:var(--w);border-radius:9px;padding:16px 13px;box-shadow:var(--sh);border-top:4px solid var(--r);text-align:center}
+.kpi.hl{background:linear-gradient(135deg,#fff3f3,#fff)}
+.kpi-label{font-size:.62rem;font-weight:700;color:var(--g3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px}
+.kpi-value{font-size:1.3rem;font-weight:900;color:var(--n);line-height:1.2}
+.kpi.hl .kpi-value{color:var(--r)}
+.kpi-sub{font-size:.61rem;color:var(--g3);margin-top:3px}
+/* ── CARD ── */
+.card{background:var(--w);border-radius:9px;box-shadow:var(--sh);padding:20px;margin-bottom:14px}
+.card-title{font-size:.76rem;font-weight:700;color:var(--g4);margin-bottom:13px;text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid var(--g2);padding-bottom:7px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+@media(max-width:800px){.g2,.g3{grid-template-columns:1fr}}
+/* ── CHART CONTAINERS ── */
+.chart-box{position:relative}
+/* ── TABLE ── */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.77rem}
+thead tr{background:var(--n);color:#fff}
+thead th{padding:9px 10px;text-align:left;font-weight:700;white-space:nowrap;font-size:.76rem;letter-spacing:.3px}
+tbody tr{border-bottom:1px solid var(--g2)}
+tbody tr:nth-child(even){background:var(--g1)}
+tbody tr:hover{background:#fff0f0}
+tbody td{padding:8px 10px;vertical-align:middle}
+.rn{font-weight:900;font-size:1rem;color:var(--r)}
+/* ── BADGES ── */
+.b{display:inline-block;font-size:.61rem;font-weight:700;padding:2px 7px;border-radius:10px;white-space:nowrap}
+.bv{background:#e3f2fd;color:#1565c0}
+.bp{background:#e8f5e9;color:#2e7d32}
+.bh{background:#fff3e0;color:#e65100}
+.bprv{background:#fce4ec;color:#b71c1c}
+.bpub{background:#f3e5f5;color:#6a1b9a}
+.beco{background:#e8f5e9;color:#2e7d32}
+.bcomp{background:#e3f2fd;color:#1565c0}
+.balt{background:#fff3e0;color:#e65100}
+.bprem{background:#fce4ec;color:#b71c1c}
+.buao{background:var(--r);color:#fff;margin-left:4px}
+/* ── FILTERS ── */
+.filt{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:11px}
+.filt select,.filt input{padding:6px 10px;border:1.5px solid var(--g2);border-radius:6px;font-size:.77rem;background:#fff;outline:none;font-family:inherit}
+.filt select:focus,.filt input:focus{border-color:var(--r)}
+.btn-clr{background:var(--r);color:#fff;border:none;padding:6px 13px;border-radius:6px;cursor:pointer;font-weight:700;font-size:.77rem;font-family:inherit}
+/* ── MAPA ── */
+#leaflet-map{height:520px;width:100%;border-radius:8px;z-index:1}
+.leaflet-popup-content-wrapper{border-left:4px solid var(--r)!important;border-radius:7px!important;font-family:Arial,sans-serif!important;font-size:.77rem!important;max-width:270px}
+.leaflet-popup-content{margin:10px 13px!important;line-height:1.6!important}
+.mapa-legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+.ml-item{display:flex;align-items:center;gap:5px;font-size:.69rem;font-weight:700;color:var(--g4)}
+.ml-dot{width:11px;height:11px;border-radius:50%;flex-shrink:0}
+/* ── UAO HERO ── */
+.uao-hero{background:linear-gradient(135deg,#0d0d0d 0%,#2a0507 60%,#ed1d24 100%);border-radius:10px;padding:28px;color:#fff;display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin-bottom:15px}
+.uao-logo-b{background:rgba(255,255,255,.12);border-radius:8px;padding:10px 16px;font-weight:900;font-size:1.55rem;letter-spacing:2px;flex-shrink:0}
+.uao-badge-s{display:inline-block;margin-top:8px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);padding:3px 11px;border-radius:20px;font-size:.7rem;font-weight:700}
+/* ── PRECIO CARDS ── */
+.pc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(196px,1fr));gap:12px;margin-bottom:14px}
+.pc{background:#fff;border-radius:9px;padding:18px;text-align:center;box-shadow:var(--sh)}
+.pc.rec{border:3px solid var(--r);box-shadow:0 4px 20px rgba(237,29,36,.18)}
+.pc-lbl{font-size:.61rem;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--g3);margin-bottom:6px}
+.pc-val{font-size:1.35rem;font-weight:900;line-height:1.2}
+.pc.rec .pc-val{color:var(--r)}
+.pc-sub{font-size:.63rem;color:var(--g3);margin-top:3px}
+/* ── CONCLUSIONS ── */
+.conc{list-style:none}
+.conc li{padding:11px 14px;margin-bottom:7px;border-radius:8px;background:var(--g1);border-left:4px solid var(--r);font-size:.83rem;line-height:1.6}
+/* ── PLAN TAGS ── */
+.ptag{display:inline-block;background:#e8f5e9;color:#2e7d32;font-size:.6rem;font-weight:700;padding:2px 6px;border-radius:10px;margin:2px}
+/* ── RANGOS KPI ── */
+.rango-kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.rk{background:#fff;border-radius:8px;padding:14px;text-align:center;box-shadow:var(--sh)}
+.rk-lbl{font-size:.62rem;font-weight:700;text-transform:uppercase;color:var(--g3);margin-bottom:4px;letter-spacing:.5px}
+.rk-val{font-size:.95rem;font-weight:900;margin-bottom:2px}
+.rk-sub{font-size:.61rem;color:var(--g3)}
+/* scrollbar */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--g2)}
+::-webkit-scrollbar-thumb{background:var(--r);border-radius:3px}
+/* footer */
+footer{background:var(--n);color:rgba(255,255,255,.4);text-align:center;padding:18px;font-size:.7rem;margin-top:16px}
+footer span{color:var(--r);font-weight:700}
+/* ── PDF ── */
+.pdf-btn{background:rgba(255,255,255,.13);color:#fff;border:1.5px solid rgba(255,255,255,.38);padding:5px 12px;border-radius:6px;cursor:pointer;font-weight:700;font-size:.73rem;font-family:inherit;display:flex;align-items:center;gap:5px;white-space:nowrap;transition:background .18s}
+.pdf-btn:hover{background:rgba(255,255,255,.24)}
+.pdf-btn svg{width:13px;height:13px;flex-shrink:0}
+#pdf-fab{position:fixed;bottom:24px;right:22px;z-index:9999;background:var(--r);color:#fff;border:none;border-radius:50px;padding:11px 18px;font-weight:700;font-size:.8rem;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:7px;box-shadow:0 4px 16px rgba(237,29,36,.45);transition:transform .15s}
+#pdf-fab:hover{transform:translateY(-2px)}
+#pdf-fab svg{width:14px;height:14px}
+
+@media print{
+
+  @page{
+    size: A4;
+    margin: 1.2cm 2.5cm;
+  }
+
+  header, nav, footer, #pdf-fab, .pdf-btn{
+    display: none !important;
+  }
+
+  main{
+    max-width: 100%!important;
+    margin: 0 auto!important;
+  }
+
+  section{
+    padding-left: 0!important;
+    padding-right: 0!important;
+  }
+
+  .chart-box{
+    padding-left: 10px!important;
+    padding-right: 10px!important;
+  }
+
+  canvas{
+    width:100%!important;
+    height:260px!important;
+  }
+
+  /* Saltos de página controlados */
+  #mapa, #uao {
+    break-before: page;
+    page-break-before: always;
+  }
+
+  h2{
+    page-break-after: avoid;
+  }
+
+  /* 🚫 NO cortar gráficos ni cards */
+  .card,
+  .chart-box,
+  canvas{
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+}
+
+*/
+
+
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="h-left">
+    <div class="h-logo">UAO</div>
+    <div>
+      <div class="h-title">Benchmark Ciberseguridad 2026</div>
+      <div class="h-sub">Universidad Autónoma de Occidente · Análisis Estratégico de Precios</div>
+    </div>
+  </div>
+  <div class="h-badge">16 programas · Colombia</div>
+  <button class="pdf-btn" onclick="window.print()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+    Descargar PDF
+  </button>
+</header>
+
+<!-- NAV -->
+<nav>
+  <a href="#resumen">Resumen</a>
+  <a href="#precios">Precios</a>
+  <a href="#ranking">Ranking</a>
+  <a href="#mapa">Mapa</a>
+  <a href="#modalidad">Modalidad</a>
+  <a href="#duracion">Duración</a>
+  <a href="#tipo">Tipo Univ.</a>
+  <a href="#plan">Plan Estudios</a>
+  <a href="#uao">Estrategia UAO</a>
+  <a href="#conclusiones">Conclusiones</a>
+</nav>
+
+<!-- PORTADA -->
+<div class="portada">
+  <div class="p-logo">UAO</div>
+  <h2>Benchmark <span>Ciberseguridad</span><br>Educación Superior Colombia</h2>
+  <p>Análisis estadístico de precios para posicionamiento estratégico del nuevo programa de la Universidad Autónoma de Occidente</p>
+  <div class="p-meta">
+    <span>📊 16 Universidades</span>
+    <span>🏙️ 7 Ciudades</span>
+    <span>💰 $2.7M – $16.1M/sem</span>
+    <span>📅 Tarifas 2026</span>
+    <span>🎓 Especializaciones</span>
+  </div>
+</div>
+
+<main>
+
+<!-- ═══════════════ RESUMEN ═══════════════ -->
+<section id="resumen" class="page-break">
+  <div class="sec-hdr"><div class="sec-line"></div><h2>Resumen Ejecutivo</h2></div>
+  <div class="kpi-grid">
+    <div class="kpi hl"><div class="kpi-label">Promedio Mercado</div><div class="kpi-value">$8.246.037</div><div class="kpi-sub">Valor semestre (COP)</div></div>
+    <div class="kpi"><div class="kpi-label">Mediana (P50)</div><div class="kpi-value">$7.267.920</div><div class="kpi-sub">Percentil 50</div></div>
+    <div class="kpi"><div class="kpi-label">Mínimo</div><div class="kpi-value">$2.766.210</div><div class="kpi-sub">Precio más bajo</div></div>
+    <div class="kpi"><div class="kpi-label">Máximo</div><div class="kpi-value">$16.100.000</div><div class="kpi-sub">Precio más alto</div></div>
+    <div class="kpi"><div class="kpi-label">Percentil 25</div><div class="kpi-value">$6.132.150</div><div class="kpi-sub">Umbral económico</div></div>
+    <div class="kpi"><div class="kpi-label">Percentil 75</div><div class="kpi-value">$8.710.080</div><div class="kpi-sub">Umbral premium</div></div>
+    <div class="kpi"><div class="kpi-label">Desv. Estándar</div><div class="kpi-value">$3.795.423</div><div class="kpi-sub">Dispersión</div></div>
+    <div class="kpi"><div class="kpi-label">Rango IQR</div><div class="kpi-value">$2.577.930</div><div class="kpi-sub">P75 − P25</div></div>
+    <div class="kpi"><div class="kpi-label">Programas</div><div class="kpi-value">16</div><div class="kpi-sub">Analizados 2026</div></div>
+  </div>
+</section>
+
+<!-- ═══════════════ PRECIOS ═══════════════ -->
+<section id="precios" >
+  <div class="sec-hdr"><div class="sec-line"></div><h2>Análisis de Precios del Mercado</h2></div>
+  <div class="card">
+    <div class="card-title">Rangos de Precios del Mercado — Percentiles Clave</div>
+    <div class="chart-box"><canvas id="ch-pct" height="90"></canvas></div>
+    <div class="rango-kpi" style="margin-top:14px">
+      <div class="rk" style="border-top:3px solid #9e9e9e"><div class="rk-lbl">Mínimo</div><div class="rk-val" style="color:#9e9e9e">$2.766.210</div><div class="rk-sub">Precio piso</div></div>
+      <div class="rk" style="border-top:3px solid #4caf50"><div class="rk-lbl">🟢 Económico ≤P25</div><div class="rk-val" style="color:#4caf50">$6.132.150</div><div class="rk-sub">Percentil 25</div></div>
+      <div class="rk" style="border-top:3px solid #2196f3"><div class="rk-lbl">🔵 Mediana P50</div><div class="rk-val" style="color:#2196f3">$7.267.920</div><div class="rk-sub">Percentil 50</div></div>
+      <div class="rk" style="border-top:3px solid #ff9800"><div class="rk-lbl">Promedio</div><div class="rk-val" style="color:#ff9800">$8.246.037</div><div class="rk-sub">Media aritmética</div></div>
+      <div class="rk" style="border-top:3px solid #ff5722"><div class="rk-lbl">🔴 Premium ≥P75</div><div class="rk-val" style="color:#ff5722">$8.710.080</div><div class="rk-sub">Percentil 75</div></div>
+      <div class="rk" style="border-top:3px solid #b71c1c"><div class="rk-lbl">Máximo</div><div class="rk-val" style="color:#b71c1c">$16.100.000</div><div class="rk-sub">Precio techo</div></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Distribución de Precios — 16 Programas (menor a mayor)</div>
+    <div class="chart-box"><canvas id="ch-dist" height="110"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Clasificación de Rangos de Precio</div>
+    <div class="kpi-grid">
+      <div class="kpi" style="border-top-color:#4caf50"><div class="kpi-label">🟢 Económico</div><div class="kpi-value" style="font-size:1rem;color:#4caf50">≤ $6.132.150</div><div class="kpi-sub">≤ Percentil 25</div></div>
+      <div class="kpi" style="border-top-color:#2196f3"><div class="kpi-label">🔵 Competitivo</div><div class="kpi-value" style="font-size:.9rem;color:#2196f3">$7.210.000 – $7.400.000</div><div class="kpi-sub">Percentil 40 – 60</div></div>
+      <div class="kpi" style="border-top-color:#ff9800"><div class="kpi-label">🟠 Alto</div><div class="kpi-value" style="font-size:.9rem;color:#ff9800">$7.400.000 – $8.710.080</div><div class="kpi-sub">Percentil 60 – 75</div></div>
+      <div class="kpi" style="border-top-color:#ed1d24"><div class="kpi-label">🔴 Premium</div><div class="kpi-value" style="font-size:1rem;color:#ed1d24">≥ $8.710.080</div><div class="kpi-sub">≥ Percentil 75</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ RANKING ═══════════════ -->
+<section id="ranking" class="page-break">
+  <div class="sec-hdr"><div class="sec-line"></div><h2>Ranking de Universidades</h2></div>
+  <div class="card">
+    <div class="card-title">Ranking por Valor de Semestre (mayor a menor)</div>
+    <div class="chart-box"><canvas id="ch-rank" height="160"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="filt">
+      <select id="f-modal" onchange="renderTable()"><option value="">Todas las modalidades</option><option>Virtual</option><option>Presencial</option><option>Presencial-Virtual</option></select>
+      <select id="f-tipo" onchange="renderTable()"><option value="">Todos los tipos</option><option>Privada</option><option>Pública</option></select>
+      <input id="f-text" type="text" placeholder="Buscar universidad..." oninput="renderTable()" style="min-width:190px">
+      <button class="btn-clr" onclick="clearFilters()">Limpiar</button>
+    </div>
+    <div class="tbl-wrap"><table><thead><tr><th>#</th><th>Universidad</th><th>Ciudad</th><th>Modalidad</th><th>Tipo</th><th>Créditos</th><th>Valor Semestre</th><th>Posición</th></tr></thead><tbody id="tbl-body"></tbody></table></div>
+  </div>
+</section>
+
+<!-- ═══════════════ MAPA ═══════════════ -->
+<section id="mapa">
+  <div class="sec-hdr"><div class="sec-line"></div><h2>Mapa Geográfico — Colombia</h2></div>
+  <div class="card">
+    <div class="card-title">Distribución Geográfica — haga clic en cada marcador para ver detalle</div>
+    <div id="leaflet-map"></div>
+    <div class="mapa-legend" id="mapa-legend"></div>
+  </div>
+</section>
+
+<!-- ═══════════════ MODALIDAD ═══════════════ -->
+<section id="modalidad">
+  <div class="sec-hdr"><div class="sec-line"></div><h2>Análisis por Modalidad</h2></div>
+  <div class="g2">
+    <div class="card"><div class="card-title">Precio Promedio por Modalidad</div><div class="chart-box"><canvas id="ch-mod-bar" height="300"></canvas></div></div>
+    <div class="card"><div class="card-title">Distribución de Programas por Modalidad</div><div class="chart-box"><canvas id="ch-mod-pie" height="300"></canvas></div></div>
+  </div>
+  <div class="card"><div class="card-title">Rango Mín / Promedio / Máx por Modalidad</div><div class="chart-box"><canvas id="ch-mod-rng" height="100"></canvas></div></div>
+</section>
+
+<!-- ═══════════════ DURACIÓN ═══════════════ -->
+<section id="duracion">
+  <div class="sec-hdr"><div class="sec-line"></div><h2>Análisis por Duración (Créditos)</h2></div>
+  <div class="g2">
+    <div class="card"><div class="card-title">Créditos por Universidad</div><div class="chart-box"><canvas id="ch-cred" height="220"></canvas></div></div>
+    <div class="card"><div class="card-title">Relación Créditos vs Valor de Semestre</div><div class="chart-box"><canvas id="ch-scatter" height="220"></canvas></div></div>
+  </div>
+</section>
+
+<!-- ═══════════════ TIPO ═══════════════ -->
+<section id="tipo">
+  <div class="sec-hdr"><div class="sec-line"></div><h2>Análisis por Tipo de Universidad</h2></div>
+  <div class="g2">
+    <div class="card"><div class="card-title">Precios: Privada vs Pública</div><div class="chart-box"><canvas id="ch-tipo-bar" height="300"></canvas></div></div>
+    <div class="card"><div class="card-title">Composición del Mercado</div><div class="chart-box"><canvas id="ch-tipo-pie" height="300"></canvas></div></div>
+  </div>
+</section>
+
+<!-- ═══════════════ PLAN ═══════════════ -->
+<section id="plan">
+  <div class="sec-hdr"><div class="sec-line"></div><h2>Análisis del Plan de Estudios</h2></div>
+  <div class="card"><div class="card-title">Temas Más Frecuentes en Planes de Estudio</div><div class="chart-box"><canvas id="ch-plan" height="120"></canvas></div></div>
+  <div class="card">
+    <div class="card-title">Temas por Universidad</div>
+    <div class="tbl-wrap"><table><thead><tr><th>Universidad</th><th>Plan de Estudios</th><th>Temas Principales</th></tr></thead><tbody id="plan-body"></tbody></table></div>
+  </div>
+</section>
+
+<!-- ═══════════════ UAO ═══════════════ -->
+<section id="uao">
+  <div class="sec-hdr"><div class="sec-line"></div><h2>Posicionamiento Estratégico UAO</h2></div>
+  <div class="uao-hero">
+    <div class="uao-logo-b">UAO</div>
+    <div>
+      <div style="font-size:1.3rem;font-weight:900;letter-spacing:-.3px">Universidad Autónoma de Occidente</div>
+      <div style="color:rgba(255,255,255,.72);margin-top:4px;font-size:.85rem">Cali, Valle del Cauca · Privada · Acreditación Institucional de Alta Calidad</div>
+      <div style="color:rgba(255,255,255,.72);font-size:.83rem">Especialización en Ciberseguridad · 2 semestres · 23 créditos · Virtual</div>
+      <div class="uao-badge-s">Precio actual: $7.210.000/sem · Posición P40 del mercado</div>
+    </div>
+  </div>
+  <div class="pc-grid">
+    <div class="pc"><div class="pc-lbl">💰 Precio Mínimo Competitivo</div><div class="pc-val" style="color:#1565c0">$7.210.000</div><div class="pc-sub">Percentil 40 del mercado</div></div>
+    <div class="pc rec"><div class="pc-lbl">⭐ Precio Sugerido UAO</div><div class="pc-val">$7.400.000 – $7.800.000</div><div class="pc-sub">Rango ideal P40–P55 · RECOMENDADO</div></div>
+    <div class="pc"><div class="pc-lbl">📈 Precio Máximo Aceptable</div><div class="pc-val" style="color:#ff9800">$8.710.080</div><div class="pc-sub">Percentil 75 · umbral premium</div></div>
+  </div>
+  <div class="card"><div class="card-title">Posicionamiento UAO — Precio Actual vs Sugerido ($7.500.000)</div><div class="chart-box"><canvas id="ch-uao" height="130"></canvas></div></div>
+  <div class="card">
+    <div class="card-title">Justificación del Precio Sugerido</div>
+    <ul class="conc">
+      <li>📊 <strong>Estadística:</strong> Promedio $8.246.037 · Mediana $7.267.920. UAO en $7.210.000 está en P40; ajustando a $7.500.000 llega al P~48, zona competitiva óptima con margen de crecimiento.</li>
+      <li>🏆 <strong>Acreditación:</strong> Toda la muestra tiene Acreditación de Alta Calidad. No es diferenciador pero valida precios sobre la mediana. La UAO puede cobrar más de $7.267.920.</li>
+      <li>🏙️ <strong>Competencia local en Cali (Virtual):</strong> Univ. Santo Tomás $4.000.000. La UAO a $7.500.000 se diferencia claramente por propuesta académica y marca institucional.</li>
+      <li>💻 <strong>Modalidad Virtual:</strong> Promedio mercado virtual = $8.770.891. UAO a $7.500.000 es competitiva y económicamente atractiva frente a otras virtuales del mercado.</li>
+      <li>📚 <strong>Créditos (23):</strong> Costo por crédito resultante ~$326.087, razonable en el mercado (rango sector: $99.507–$670.833 por crédito).</li>
+      <li>💰 <strong>Precio recomendado:</strong> <strong>$7.500.000/semestre · $15.000.000 total carrera</strong>. Posición P~48 (zona competitiva), con margen para ajustes futuros sin perder posición.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ═══════════════ CONCLUSIONES ═══════════════ -->
+<section id="conclusiones">
+  <div class="sec-hdr"><div class="sec-line"></div><h2>Conclusiones</h2></div>
+  <div class="card">
+    <ul class="conc">
+      <li>🎯 <strong>Alta dispersión:</strong> El mercado oscila entre $2.766.210 y $16.100.000/semestre (σ = $3.795.423). Existen cuatro segmentos: económico, competitivo, alto y premium.</li>
+      <li>📍 <strong>Zona competitiva (P25–P75):</strong> $6.132.150 – $8.710.080/semestre. Concentra 8 de 16 programas y representa el equilibrio precio-valor óptimo del mercado.</li>
+      <li>💻 <strong>Virtualidad como valor:</strong> Promedio virtual $8.770.891 vs presencial $7.924.493. La modalidad virtual es percibida como diferencial de valor en el mercado colombiano.</li>
+      <li>🏛️ <strong>Única pública (ITM):</strong> Precio $6.921.200 — rango competitivo-bajo. No representa amenaza directa para privadas acreditadas.</li>
+      <li>🔒 <strong>Temas dominantes:</strong> Ciberseguridad organizacional, gestión de riesgos y hacking ético aparecen en más del 80% de los programas. UAO debe diferenciarse con IA aplicada y laboratorios virtuales.</li>
+      <li>🏆 <strong>Acreditación universal:</strong> Todas las instituciones tienen Acreditación de Alta Calidad — requisito de entrada, no diferenciador. El diferencial debe ser curricular y pedagógico.</li>
+      <li>💰 <strong>Precio sugerido UAO: $7.500.000/semestre · $15.000.000 carrera.</strong> Posición P~48 — zona competitiva, alineado con acreditación y con margen de crecimiento sostenible.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="resumen" class="pdf-section">
+<section id="precios" class="pdf-section">
+<section id="ranking" class="pdf-section">
+<section id="mapa" class="pdf-section">
+<section id="modalidad" class="pdf-section">
+<section id="duracion" class="pdf-section">
+<section id="tipo" class="pdf-section">
+<section id="plan" class="pdf-section">
+<section id="uao" class="pdf-section pdf-highlight">
+<section id="conclusiones" class="pdf-section">
+
+
+</main>
+
+<footer>
+  <span>Universidad Autónoma de Occidente</span> · Benchmark Especialización en Ciberseguridad · Colombia 2026 · Análisis basado en 16 programas reales del mercado colombiano
+</footer>
+
+<script>
+// ═══════════════ DATA ═══════════════
+const DATA = [
+  {u:"Univ. Piloto",         full:"CORP. UNIVERSIDAD PILOTO DE COLOMBIA",         ciudad:"Bogotá",      modalidad:"Virtual",           creditos:21, valor:7863555,  tipo:"Privada", plan:"Evaluación de marcos de ciberseguridad, identificación de riesgos y gerencia de proyectos de seguridad informática"},
+  {u:"Corp. Asturias",       full:"CORPORACION UNIVERSITARIA DE ASTURIAS",         ciudad:"Bogotá",      modalidad:"Virtual",           creditos:24, valor:7400000,  tipo:"Privada", plan:"Hacking ético, análisis forense, auditoría de sistemas y gestión de riesgos cibernéticos con visión integral"},
+  {u:"Corp. Iberoamericana", full:"CORPORACION UNIVERSITARIA IBEROAMERICANA",      ciudad:"Bogotá",      modalidad:"Virtual",           creditos:29, valor:5926798,  tipo:"Privada", plan:"Diseño e implementación de soluciones de ciberseguridad con responsabilidad social, innovación y transformación organizacional"},
+  {u:"UNIMINUTO Virtual",    full:"UNIMINUTO - Virtual",                           ciudad:"Bogotá",      modalidad:"Virtual",           creditos:24, valor:6200600,  tipo:"Privada", plan:"Protección de información con electivas en seguridad cloud y aplicaciones web; tecnologías emergentes para prevenir ciberguerra"},
+  {u:"UNIMINUTO Presencial", full:"UNIMINUTO - Presencial",                        ciudad:"Bogotá",      modalidad:"Presencial",        creditos:24, valor:7265400,  tipo:"Privada", plan:"Planificación, diseño e implantación de operaciones de ciberseguridad; doble insignia en DevSecOps y Gestión de Amenazas"},
+  {u:"F.U. María Cano",      full:"FUNDACION UNIVERSITARIA MARIA CANO",            ciudad:"Medellín",    modalidad:"Presencial",        creditos:29, valor:7270440,  tipo:"Privada", plan:"Ciberseguridad como elemento estratégico organizacional; protección de información bajo legislación nacional e internacional (CIA)"},
+  {u:"CEIPA",                full:"FUNDACION UNIVERSITARIA-CEIPA-",                ciudad:"Barranquilla",modalidad:"Presencial-Virtual", creditos:22, valor:12842699, tipo:"Privada", plan:"Diseño e implementación de soluciones de protección avanzada contra ciberataques, con formación de clase mundial"},
+  {u:"ITM (Pública)",        full:"INSTITUCION UNIVERSITARIA - ITM",               ciudad:"Medellín",    modalidad:"Presencial-Virtual", creditos:27, valor:6921200,  tipo:"Pública", plan:"Administración de ciberseguridad, análisis forense, SGSI y monitoreo de amenazas con ética y responsabilidad social"},
+  {u:"UNAB",                 full:"UNIV. AUTONOMA DE BUCARAMANGA-UNAB-",           ciudad:"Bucaramanga", modalidad:"Presencial",        creditos:22, valor:10884720, tipo:"Privada", plan:"Protección de organizaciones frente a vulnerabilidades TIC mediante buenas prácticas; visión corporativa de la seguridad"},
+  {u:"UAO ★",               full:"UNIVERSIDAD AUTONOMA DE OCCIDENTE",             ciudad:"Cali",        modalidad:"Virtual",           creditos:23, valor:7210000,  tipo:"Privada", plan:"Protección teórico-práctica mediante máquinas virtuales, recrea escenarios reales de defensa y ataque en redes y datos", isUAO:true},
+  {u:"UNAULA",               full:"UNIV. AUTONOMA LATINOAMERICANA-UNAULA-",        ciudad:"Medellín",    modalidad:"Presencial",        creditos:28, valor:2766210,  tipo:"Privada", plan:"Aseguramiento de información empresarial mediante diseño de proyectos, planes y herramientas de seguridad para sistemas informáticos"},
+  {u:"U. Católica Manizales",full:"UNIVERSIDAD CATOLICA DE MANIZALES",             ciudad:"Manizales",   modalidad:"Presencial",        creditos:25, valor:7985200,  tipo:"Privada", plan:"Cibercrimen, ciberseguridad y hacking ético frente a desafíos organizacionales y sociales en contexto global"},
+  {u:"U. Cooperativa Cali",  full:"UNIVERSIDAD COOPERATIVA DE COLOMBIA",           ciudad:"Cali",        modalidad:"Presencial",        creditos:24, valor:5577768,  tipo:"Privada", plan:"Enfoque multidisciplinario: tríada CIA, diagnóstico de riesgos, ingeniería social, gobernanza y continuidad del negocio"},
+  {u:"U. La Sabana",         full:"UNIVERSIDAD DE LA SABANA",                      ciudad:"Chía",        modalidad:"Virtual",           creditos:24, valor:16100000, tipo:"Privada", plan:"Liderazgo estratégico para gestionar activos digitales; combina técnica y estrategia con aplicación de IA a la seguridad"},
+  {u:"U. EAN",               full:"UNIVERSIDAD EAN",                               ciudad:"Bogotá",      modalidad:"Presencial",        creditos:28, valor:15722000, tipo:"Privada", plan:"Gerencia y liderazgo estratégico frente a la Industria 4.0; anticipación de riesgos con visión del Foro Económico Mundial"},
+  {u:"U. Santo Tomás Cali",  full:"UNIVERSIDAD SANTO TOMAS - Cali",               ciudad:"Cali",        modalidad:"Virtual",           creditos:24, valor:4000000,  tipo:"Privada", plan:"Políticas de seguridad informática, gestión de equipos multidisciplinarios y defensa del ciberespacio con enfoque ético"},
+];
+
+// ═══════════════ STATS ═══════════════
+const vals = DATA.map(d=>d.valor).sort((a,b)=>a-b);
+const mean = vals.reduce((s,v)=>s+v,0)/vals.length;
+const pct  = p => { const i=p*(vals.length-1), lo=Math.floor(i), hi=Math.ceil(i); return vals[lo]+(i-lo)*(vals[hi]-vals[lo]); };
+const p25=pct(.25), p40=pct(.4), p50=pct(.5), p60=pct(.6), p75=pct(.75);
+const minV=vals[0], maxV=vals[vals.length-1];
+
+const fmt  = v => '$' + Math.round(v).toLocaleString('es-CO');
+const fmtM = v => '$' + (Math.round(v/100000)/10).toFixed(1) + 'M';
+const R='#ed1d24';
+
+function mktPos(v){
+  if(v<=p25) return {lbl:'Económico',cls:'beco'};
+  if(v<=p60) return {lbl:'Competitivo',cls:'bcomp'};
+  if(v<=p75) return {lbl:'Alto',cls:'balt'};
+  return {lbl:'Premium',cls:'bprem'};
+}
+
+
+Chart.register(ChartDataLabels);
+Chart.defaults.plugins.datalabels.display = false;
+// ═══════════════ CHART.JS DEFAULTS ═══════════════
+
+Chart.defaults.font.family = 'Arial, Helvetica, sans-serif';
+Chart.defaults.font.size   = 11;
+Chart.defaults.plugins.tooltip.callbacks.label = ctx => ' ' + fmt(ctx.parsed.y ?? ctx.parsed.x ?? ctx.raw);
+
+// ── 1. Percentiles ──
+new Chart('ch-pct', {
+  type: 'bar',
+  data: {
+    labels: ['Mínimo','P25','Mediana P50','Promedio','P75','Máximo'],
+    datasets: [{
+      label: 'Valor semestre (COP)',
+      data: [minV, p25, p50, mean, p75, maxV],
+      backgroundColor: ['#9e9e9e','#4caf50','#2196f3','#ff9800','#ff5722','#b71c1c'],
+      borderRadius: 6,
+    }]
+  },
+  options: {
+    responsive:true, maintainAspectRatio:true,
+    plugins:{ legend:{display:false}, tooltip:{callbacks:{label:ctx=>fmt(ctx.raw)}}},
+    scales:{ y:{ticks:{callback:fmtM}, grid:{color:'#eee'}}, x:{grid:{display:false}} }
+  }
+});
+
+// ── 2. Distribución 16 programas ──
+const dataAsc = [...DATA].sort((a,b)=>a.valor-b.valor);
+new Chart('ch-dist', {
+  type:'bar',
+  data:{
+    labels: dataAsc.map(d=>d.u),
+    datasets:[
+      { label:'Valor semestre',
+        data: dataAsc.map(d=>d.valor),
+        backgroundColor: dataAsc.map(d=>d.isUAO?R:'#424242'),
+        borderRadius:5,
+      }
+    ]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:true,
+    plugins:{
+      legend:{display:false},
+      tooltip:{callbacks:{label:ctx=>fmt(ctx.raw)}},
+      annotation:{}
+    },
+    scales:{
+      y:{ticks:{callback:fmtM},grid:{color:'#eee'}},
+      x:{ticks:{font:{size:9},maxRotation:40},grid:{display:false}}
+    }
+  }
+});
+
+// ── 3. Ranking horizontal ──
+const dataDesc = [...DATA].sort((a,b)=>b.valor-a.valor);
+new Chart('ch-rank', {
+  type:'bar',
+  data:{
+    labels: dataDesc.map(d=>d.u),
+    datasets:[{ label:'Valor semestre',
+      data:dataDesc.map(d=>d.valor),
+      backgroundColor:dataDesc.map(d=>d.isUAO?R:'#424242'),
+      borderRadius:5,
+      indexAxis:'y'
+    }]
+  },
+  options:{
+    indexAxis:'y',
+    responsive:true, maintainAspectRatio:true,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>fmt(ctx.raw)}}},
+    scales:{
+      x:{ticks:{callback:fmtM},grid:{color:'#eee'}},
+      y:{ticks:{font:{size:9}},grid:{display:false}}
+    }
+  }
+});
+
+// ── 4. Modalidad bar ──
+const modals = ['Virtual','Presencial','Presencial-Virtual'];
+const modColors = ['#1565c0','#2e7d32','#e65100'];
+const modAvg = modals.map(m=>{ const vs=DATA.filter(d=>d.modalidad===m).map(d=>d.valor); return Math.round(vs.reduce((s,v)=>s+v,0)/vs.length); });
+new Chart('ch-mod-bar', {
+  type:'bar',
+  data:{ labels:modals, datasets:[{ label:'Promedio', data:modAvg, backgroundColor:modColors, borderRadius:6 }] },
+  options:{ responsive:true, maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>fmt(ctx.raw)}}},
+    scales:{ y:{ticks:{callback:fmtM},grid:{color:'#eee'}}, x:{grid:{display:false}} } }
+});
+
+// ── 5. Modalidad pie ──
+const modCnt = modals.map(m=>DATA.filter(d=>d.modalidad===m).length);
+new Chart('ch-mod-pie', {
+  type:'doughnut',
+  data:{ labels:modals, datasets:[{ data:modCnt, backgroundColor:modColors, borderWidth:2, borderColor:'#fff' }] },
+  options:{ responsive:true, maintainAspectRatio:false,
+    plugins:{
+      legend:{position:'bottom', labels:{font:{size:10}, padding:14}},
+      tooltip:{callbacks:{label:ctx=>ctx.label+': '+ctx.raw+' programas'}},
+
+      datalabels:{
+        display:true,
+        color:'#fff',
+        font:{weight:'bold', size:14},
+        formatter:(value, ctx)=>{
+          const total = ctx.chart.data.datasets[0].data.reduce((a,b)=>a+b,0);
+          return Math.round((value/total)*100) + '%';
+        }
+      }
+    }
+  },
+  plugins:[ChartDataLabels]
+});
+
+// ── 6. Modalidad rango min/avg/max ──
+const modMin = modals.map(m=>Math.min(...DATA.filter(d=>d.modalidad===m).map(d=>d.valor)));
+const modMax = modals.map(m=>Math.max(...DATA.filter(d=>d.modalidad===m).map(d=>d.valor)));
+new Chart('ch-mod-rng', {
+  type:'bar',
+  data:{ labels:modals, datasets:[
+    {label:'Mínimo',   data:modMin, backgroundColor:'#4caf50', borderRadius:4},
+    {label:'Promedio', data:modAvg, backgroundColor:'#2196f3', borderRadius:4},
+    {label:'Máximo',   data:modMax, backgroundColor:R,         borderRadius:4},
+  ]},
+  options:{ responsive:true, maintainAspectRatio:true,
+    plugins:{ legend:{position:'top', labels:{font:{size:10}}},
+      tooltip:{callbacks:{label:ctx=>ctx.dataset.label+': '+fmt(ctx.raw)}} },
+    scales:{ y:{ticks:{callback:fmtM},grid:{color:'#eee'}}, x:{grid:{display:false}} } }
+});
+
+// ── 7. Créditos bar ──
+const credAsc = [...DATA].sort((a,b)=>a.creditos-b.creditos);
+new Chart('ch-cred', {
+  type:'bar',
+  data:{ labels:credAsc.map(d=>d.u), datasets:[{
+    label:'Créditos', data:credAsc.map(d=>d.creditos),
+    backgroundColor:credAsc.map(d=>d.isUAO?R:'#424242'), borderRadius:5
+  }]},
+  options:{ responsive:true, maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.raw+' créditos'}}},
+    scales:{ y:{min:16,max:32,grid:{color:'#eee'}},
+      x:{ticks:{font:{size:8},maxRotation:45},grid:{display:false}} } }
+});
+
+// ── 8. Scatter créditos vs valor ──
+new Chart('ch-scatter', {
+  type:'scatter',
+  data:{
+    datasets:[
+      { label:'Otras universidades',
+        data: DATA.filter(d=>!d.isUAO).map(d=>({x:d.creditos,y:d.valor,u:d.u})),
+        backgroundColor:'rgba(66,66,66,.7)', pointRadius:7, pointHoverRadius:9
+      },
+      { label:'UAO',
+        data: DATA.filter(d=>d.isUAO).map(d=>({x:d.creditos,y:d.valor,u:d.u})),
+        backgroundColor:R, pointRadius:10, pointHoverRadius:12
+      }
+    ]
+  },
+  options:{ responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{position:'top',labels:{font:{size:10}}},
+      tooltip:{callbacks:{label:ctx=>ctx.raw.u+' — '+ctx.raw.x+' cr · '+fmt(ctx.raw.y)}} },
+    scales:{ x:{title:{display:true,text:'Créditos'},grid:{color:'#eee'}},
+      y:{title:{display:true,text:'Valor semestre'},ticks:{callback:fmtM},grid:{color:'#eee'}} } }
+});
+
+// ── 9. Tipo bar ──
+const tipos = ['Privada','Pública'];
+const tipoMin = tipos.map(t=>Math.min(...DATA.filter(d=>d.tipo===t).map(d=>d.valor)));
+const tipoAvg = tipos.map(t=>{ const vs=DATA.filter(d=>d.tipo===t).map(d=>d.valor); return Math.round(vs.reduce((s,v)=>s+v,0)/vs.length); });
+const tipoMax = tipos.map(t=>Math.max(...DATA.filter(d=>d.tipo===t).map(d=>d.valor)));
+new Chart('ch-tipo-bar', {
+  type:'bar',
+  data:{ labels:tipos, datasets:[
+    {label:'Mínimo',   data:tipoMin, backgroundColor:'#4caf50', borderRadius:5},
+    {label:'Promedio', data:tipoAvg, backgroundColor:'#1565c0', borderRadius:5},
+    {label:'Máximo',   data:tipoMax, backgroundColor:R,         borderRadius:5},
+  ]},
+  options:{ responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{position:'top',labels:{font:{size:10}}},
+      tooltip:{callbacks:{label:ctx=>ctx.dataset.label+': '+fmt(ctx.raw)}} },
+    scales:{ y:{ticks:{callback:fmtM},grid:{color:'#eee'}}, x:{grid:{display:false}} } }
+});
+
+// ── 10. Tipo pie ──
+const tipoCnt = tipos.map(t=>DATA.filter(d=>d.tipo===t).length);
+
+new Chart('ch-tipo-pie', {
+  type:'doughnut',
+  data:{ 
+    labels:tipos, 
+    datasets:[{ 
+      data:tipoCnt, 
+      backgroundColor:['#b71c1c','#6a1b9a'], 
+      borderWidth:2, 
+      borderColor:'#fff' 
+    }] 
+  },
+  options:{ 
+    responsive:true, 
+    maintainAspectRatio:false,
+    plugins:{ 
+      legend:{position:'bottom',labels:{font:{size:10}}},
+      tooltip:{callbacks:{label:ctx=>ctx.label+': '+ctx.raw+' programas'}},
+
+      datalabels:{
+        display:true,
+        color:'#fff',
+        font:{weight:'bold', size:12},
+        formatter:(value, ctx)=>{
+          const total = ctx.chart.data.datasets[0].data.reduce((a,b)=>a+b,0);
+          return Math.round((value/total)*100) + '%';
+        }
+      }
+    } 
+  }
+});
+
+// ── 11. Plan de estudios ──
+const TOPICS = [
+  {k:'Ciberseguridad Org.',  kw:['ciberseguridad']},
+  {k:'Gestión de Riesgos',   kw:['riesgo']},
+  {k:'Hacking Ético',        kw:['hacking']},
+  {k:'Análisis Forense',     kw:['forense']},
+  {k:'Protección de Datos',  kw:['protección de info','protección de dato']},
+  {k:'Seguridad Cloud',      kw:['cloud']},
+  {k:'Normativas/Legislación',kw:['legislación','normativ']},
+  {k:'SGSI',                 kw:['sgsi']},
+  {k:'Gobernanza TI',        kw:['gobernanza']},
+  {k:'IA Aplicada',          kw:['ia a','inteligencia artificial']},
+  {k:'DevSecOps',            kw:['devsecops']},
+  {k:'Ingeniería Social',    kw:['ingeniería social']},
+];
+const topicCounts = TOPICS.map(t=>({name:t.k, count:DATA.filter(d=>t.kw.some(kw=>d.plan.toLowerCase().includes(kw))).length}))
+                          .filter(t=>t.count>0).sort((a,b)=>b.count-a.count);
+new Chart('ch-plan', {
+  type:'bar',
+  data:{ labels:topicCounts.map(t=>t.name),
+    datasets:[{label:'Programas', data:topicCounts.map(t=>t.count),
+      backgroundColor:R, borderRadius:5, indexAxis:'y'}] },
+  options:{
+  indexAxis:'y',
+  responsive:true,
+  maintainAspectRatio:true,
+  plugins:{
+    legend:{display:false},
+    tooltip:{callbacks:{label:ctx=>ctx.raw+' programas'}}
+  },
+  scales:{
+    x:{
+      title:{
+        display:true,
+        text:'Número de programas'
+      },
+      ticks:{stepSize:1},
+      grid:{color:'#eee'}
+    },
+    y:{
+      title:{
+        display:true,
+        text:'Tema'
+      },
+      ticks:{font:{size:10}},
+      grid:{display:false}
+    }
+  }
+}
+});
+
+// ── 12. UAO posicionamiento ──
+const uaoAsc = [...DATA].sort((a,b)=>a.valor-b.valor);
+new Chart('ch-uao', {
+  type:'bar',
+  data:{
+    labels: uaoAsc.map(d=>d.u),
+    datasets:[
+      { label:'Valor semestre', data:uaoAsc.map(d=>d.valor),
+        backgroundColor:uaoAsc.map(d=>d.isUAO?R:'#bdbdbd'), borderRadius:5 }
+    ]
+  },
+  options:{ responsive:true, maintainAspectRatio:true,
+    plugins:{
+      legend:{display:false},
+      tooltip:{callbacks:{label:ctx=>fmt(ctx.raw)}},
+      annotation:{}
+    },
+    scales:{
+      y:{ ticks:{callback:fmtM}, grid:{color:'#eee'},
+          suggestedMin:0,
+          afterDataLimits(scale){ scale.max = Math.max(scale.max, 17000000); }
+      },
+      x:{ ticks:{font:{size:8},maxRotation:42}, grid:{display:false} }
+    }
+  }
+});
+
+// ═══════════════ TABLE ═══════════════
+function clearFilters(){ document.getElementById('f-modal').value=''; document.getElementById('f-tipo').value=''; document.getElementById('f-text').value=''; renderTable(); }
+function renderTable(){
+  const fm=document.getElementById('f-modal').value;
+  const ft=document.getElementById('f-tipo').value;
+  const fx=document.getElementById('f-text').value.toLowerCase();
+  const rows=[...DATA].filter(d=>(!fm||d.modalidad===fm)&&(!ft||d.tipo===ft)&&(!fx||d.full.toLowerCase().includes(fx)))
+                      .sort((a,b)=>a.valor-b.valor);
+  document.getElementById('tbl-body').innerHTML=rows.map((d,i)=>{
+    const pos=mktPos(d.valor);
+    const mc=d.modalidad==='Virtual'?'bv':d.modalidad==='Presencial'?'bp':'bh';
+    const tc=d.tipo==='Privada'?'bprv':'bpub';
+    return `<tr>
+      <td><span class="rn">${i+1}</span></td>
+      <td><strong style="color:${d.isUAO?R:'inherit'};font-size:.77rem">${d.full}</strong>${d.isUAO?'<span class="b buao">UAO</span>':''}</td>
+      <td>${d.ciudad}</td>
+      <td><span class="b ${mc}">${d.modalidad}</span></td>
+      <td><span class="b ${tc}">${d.tipo}</span></td>
+      <td style="text-align:center">${d.creditos}</td>
+      <td><strong style="color:${d.isUAO?R:'inherit'}">${fmt(d.valor)}</strong></td>
+      <td><span class="b ${pos.cls}">${pos.lbl}</span></td>
+    </tr>`;
+  }).join('');
+}
+renderTable();
+
+// ═══════════════ PLAN TABLE ═══════════════
+(function(){
+  function getTagsHtml(plan){
+    return TOPICS.filter(t=>t.kw.some(kw=>plan.toLowerCase().includes(kw))).map(t=>`<span class="ptag">${t.k}</span>`).join('');
+  }
+  document.getElementById('plan-body').innerHTML=DATA.map(d=>`
+    <tr>
+      <td><strong style="color:${d.isUAO?R:'inherit'};font-size:.75rem">${d.full}</strong>${d.isUAO?'<span class="b buao" style="margin-left:4px">UAO</span>':''}</td>
+      <td style="font-size:.7rem;color:#555;max-width:260px;line-height:1.5">${d.plan}</td>
+      <td>${getTagsHtml(d.plan)||'<span style="color:#bbb;font-size:.7rem">—</span>'}</td>
+    </tr>
+  `).join('');
+})();
+
+// ═══════════════ MAPA LEAFLET — Colombia real ═══════════════
+(function(){
+  // Coordenadas reales de cada ciudad
+  const GEO = {
+    'Bogotá':      {lat:4.7110,  lon:-74.0721},
+    'Medellín':    {lat:6.2442,  lon:-75.5812},
+    'Cali':        {lat:3.4516,  lon:-76.5320},
+    'Barranquilla':{lat:10.9685, lon:-74.7813},
+    'Bucaramanga': {lat:7.1193,  lon:-73.1227},
+    'Manizales':   {lat:5.0703,  lon:-75.5138},
+    'Chía':        {lat:4.8607,  lon:-74.0568}
+  };
+  const COLORS = {
+    'Bogotá':'#1565c0','Medellín':'#2e7d32','Cali':'#ed1d24',
+    'Barranquilla':'#e65100','Bucaramanga':'#6a1b9a',
+    'Manizales':'#00838f','Chía':'#558b2f'
+  };
+
+  // Agrupar por ciudad
+  const byCity = {};
+  DATA.forEach(d => {
+    byCity[d.ciudad] = byCity[d.ciudad] || [];
+    byCity[d.ciudad].push(d);
+  });
+
+  // Inicializar mapa centrado en Colombia
+  const map = L.map('leaflet-map', {center:[4.5709,-74.2973], zoom:6, preferCanvas:true});
+
+  // Tiles Carto (ligeros, sin token, HTTPS)
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution:'© <a href="https://www.openstreetmap.org/copyright">OSM</a> © <a href="https://carto.com/">CARTO</a>',
+    subdomains:'abcd', maxZoom:19
+  }).addTo(map);
+
+  // Crear marcadores por ciudad
+  Object.entries(GEO).forEach(([ciudad, {lat, lon}]) => {
+    const unis = byCity[ciudad] || [];
+    const avg  = unis.length ? Math.round(unis.reduce((s,d)=>s+d.valor,0)/unis.length) : 0;
+    const n    = unis.length;
+    const col  = COLORS[ciudad] || R;
+    const r    = 14 + n * 5;
+
+    // Icono circular con número de programas
+    const icon = L.divIcon({
+      className: '',
+      html: '<div style="width:'+2*r+'px;height:'+2*r+'px;border-radius:50%;background:'+col+';'
+          + 'border:2.5px solid #fff;display:flex;align-items:center;justify-content:center;'
+          + 'color:#fff;font-weight:900;font-size:'+(r>18?13:11)+'px;'
+          + 'box-shadow:0 2px 8px rgba(0,0,0,.35);font-family:Arial,sans-serif">'+n+'</div>',
+      iconSize:  [2*r, 2*r],
+      iconAnchor:[r, r]
+    });
+
+    // Contenido del popup
+    let rows = '';
+    unis.forEach(d => {
+      rows += '<div style="margin-top:7px;padding-top:7px;border-top:1px solid #eee">'
+            + '<div style="font-weight:700;font-size:.77rem;color:'+(d.isUAO?R:'#212121')+'">'+d.full+(d.isUAO?' ★':'')+' </div>'
+            + '<div style="font-size:.71rem;color:#666;margin-top:2px">'+d.modalidad+' · '+d.tipo+'</div>'
+            + '<div style="font-size:.77rem;font-weight:700;color:'+(d.isUAO?R:'#1565c0')+';margin-top:2px">'+fmt(d.valor)+'/sem</div>'
+            + '</div>';
+    });
+    const popup = '<div style="font-family:Arial,sans-serif">'
+      + '<div style="font-size:.9rem;font-weight:900;color:#0d0d0d;margin-bottom:3px">📍 '+ciudad+'</div>'
+      + '<div style="font-size:.71rem;color:#666">'+n+' programa(s) · Prom: '+fmt(avg)+'</div>'
+      + rows + '</div>';
+
+    L.marker([lat, lon], {icon})
+      .addTo(map)
+      .bindPopup(popup, {maxWidth:280})
+      .bindTooltip('<b>'+ciudad+'</b> — '+n+' programa(s)', {sticky:true});
+  });
+
+  // Leyenda
+  const leg = document.getElementById('mapa-legend');
+  Object.entries(COLORS).forEach(([ciudad, col]) => {
+    const item = document.createElement('div');
+    item.className = 'ml-item';
+    item.innerHTML = '<div class="ml-dot" style="background:'+col+'"></div>'+ciudad+' ('+(byCity[ciudad]?.length||0)+')';
+    leg.appendChild(item);
+  });
+
+  // Ajustar tamaño al cargar
+  map.whenReady(() => setTimeout(() => map.invalidateSize(), 150));
+})();
+</script>
+
+
+
+
+</body>
+</html>
